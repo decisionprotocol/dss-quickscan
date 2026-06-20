@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<title>DSS QuickScan Dual Lens | Decision Protocol</title>
+<meta name="description" content="Evaluare rapida a mediului decizional. Doua perspective, un scor, un raport.">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --black:#080808;
+  --surface:#0F0F0F;
+  --card:#141414;
+  --border:#1E1E1E;
+  --border-mid:#2A2A2A;
+  --paper:#F0EDE6;
+  --paper-dim:#B8B4AC;
+  --muted:#6A6660;
+  --gold:#C4A862;
+  --gold-hover:#D4B872;
+  --red:#9B3535;
+  --red-bright:#C45050;
+  --green:#5E8A6B;
+  --serif:'Open Sans',Arial,sans-serif;
+  --sans:'Open Sans',Arial,sans-serif;
+}
+
+html{scroll-behavior:smooth}
+body{
+  background:var(--black);color:var(--paper);
+  font-family:var(--serif);font-size:17px;line-height:1.7;
+  -webkit-font-smoothing:antialiased;
+}
+
+.wrap{max-width:680px;margin:0 auto;padding:0 28px}
+
+nav{border-bottom:1px solid var(--border);padding:18px 0}
+nav .wrap{display:flex;align-items:center;justify-content:space-between}
+.logo{font-family:var(--sans);font-size:10px;color:var(--gold);text-decoration:none}
+.tag{font-family:var(--sans);font-size:9px;color:var(--muted)}
+
+.screen{display:none;padding:56px 0}
+.screen.active{display:block}
+
+.eyebrow{font-family:var(--sans);font-size:9px;color:var(--gold);margin-bottom:20px;display:flex;align-items:center;gap:14px}
+.eyebrow::after{content:'';flex:1;height:1px;background:var(--border-mid)}
+
+h1{font-family:var(--serif);font-weight:normal;font-size:clamp(28px,5vw,42px);line-height:1.18;color:var(--paper);margin-bottom:14px}
+h1 em{color:var(--gold)}
+.sub{font-size:15px;color:var(--muted);line-height:1.6;margin-bottom:36px}
+
+/* ── ENTRY SCREEN ── */
+.role-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:32px 0}
+.role-card{
+  background:var(--surface);border:1px solid var(--border-mid);
+  padding:24px 20px;cursor:pointer;transition:border-color .15s,background .15s;
+  text-align:left;
+}
+.role-card:hover{border-color:var(--gold-dim);background:var(--card)}
+.role-card.selected{border-color:var(--gold);background:var(--card)}
+.role-name{font-family:var(--sans);font-size:11px;font-weight:bold;color:var(--gold);margin-bottom:8px}
+.role-desc{font-size:13.5px;color:var(--muted);line-height:1.55}
+
+.field-group{margin-bottom:24px}
+.field-label{font-family:var(--sans);font-size:9px;color:var(--muted);margin-bottom:10px;display:block}
+.field{
+  width:100%;background:var(--black);border:1px solid var(--border-mid);
+  color:var(--paper);font-family:var(--serif);font-size:16px;
+  padding:14px 16px;outline:none;transition:border-color .15s;
+}
+.field::placeholder{color:#3A3A3A}
+.field:focus{border-color:var(--gold)}
+.field.err{border-color:var(--red)}
+
+.btn{
+  background:var(--gold);color:var(--black);border:none;cursor:pointer;
+  font-family:var(--sans);font-size:10px;font-weight:bold;padding:15px 32px;transition:background .15s;
+  -webkit-appearance:none;
+}
+.btn:hover{background:var(--gold-hover)}
+.btn:disabled{background:#3A3A3A;color:#666;cursor:not-allowed}
+.btn-secondary{
+  background:transparent;color:var(--paper-dim);border:1px solid var(--border-mid);
+  font-family:var(--sans);font-size:10px;font-weight:bold;padding:14px 28px;cursor:pointer;transition:all .15s;
+}
+.btn-secondary:hover{border-color:var(--gold);color:var(--gold)}
+
+.err-msg{display:none;color:var(--red-bright);font-size:13px;margin-top:8px}
+.err-msg.show{display:block}
+
+/* ── SURVEY SCREEN ── */
+.progress-bar{height:2px;background:var(--border);margin-bottom:40px;position:relative}
+.progress-fill{height:2px;background:var(--gold);width:0%;transition:width .25s}
+
+.dim-header{margin-bottom:28px}
+.dim-name{font-family:var(--sans);font-size:9px;color:var(--gold);margin-bottom:6px}
+.dim-desc{font-size:14px;color:var(--muted);}
+
+.q-block{margin-bottom:36px;padding-bottom:32px;border-bottom:1px solid var(--border)}
+.q-block:last-child{border-bottom:none}
+.q-text{font-size:16.5px;color:var(--paper);line-height:1.6;margin-bottom:18px}
+.scale-row{display:flex;gap:8px;justify-content:space-between}
+.scale-opt{
+  flex:1;background:var(--surface);border:1px solid var(--border-mid);
+  padding:12px 4px;text-align:center;cursor:pointer;transition:all .15s;
+}
+.scale-opt:hover{border-color:var(--gold-dim)}
+.scale-opt.selected{border-color:var(--gold);background:var(--card)}
+.scale-num{font-family:var(--sans);font-size:15px;font-weight:bold;color:var(--paper);display:block;margin-bottom:3px}
+.scale-opt.selected .scale-num{color:var(--gold)}
+.scale-label{font-size:9.5px;color:var(--muted);line-height:1.2;display:block}
+
+/* Trigger questions */
+.trigger-block{margin-bottom:28px;padding-bottom:24px;border-bottom:1px solid var(--border)}
+.trigger-block:last-child{border-bottom:none}
+.trigger-tag{font-family:var(--sans);font-size:9px;color:var(--gold);margin-bottom:8px}
+.trigger-quote{font-size:15px;color:var(--paper-dim);line-height:1.55;margin-bottom:16px}
+.tri-row{display:flex;gap:10px}
+.tri-opt{
+  flex:1;background:var(--surface);border:1px solid var(--border-mid);
+  padding:12px 8px;text-align:center;cursor:pointer;font-family:var(--sans);
+  font-size:11px;color:var(--muted);
+  transition:all .15s;
+}
+.tri-opt:hover{border-color:var(--gold-dim)}
+.tri-opt.selected{border-color:var(--gold);background:var(--card);color:var(--gold)}
+
+.nav-row{display:flex;justify-content:space-between;align-items:center;margin-top:40px}
+
+/* ── WAITING SCREEN ── */
+.wait-box{text-align:center;padding:48px 24px}
+.wait-icon{
+  width:48px;height:48px;border:1px solid var(--gold);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;margin:0 auto 24px;
+  color:var(--gold);font-size:20px;
+}
+.code-display{
+  font-family:var(--sans);font-size:24px;color:var(--gold);
+  margin:20px 0;padding:16px;background:var(--surface);border:1px solid var(--border-mid);
+}
+
+/* ── REPORT SCREEN ── */
+.score-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);margin:32px 0}
+.score-cell{background:var(--card);padding:24px 20px;text-align:center}
+.score-label{font-family:var(--sans);font-size:9px;color:var(--muted);margin-bottom:10px}
+.score-num{font-size:38px;color:var(--gold);line-height:1}
+
+.dim-table{width:100%;border-collapse:collapse;margin:24px 0}
+.dim-table th{
+  font-family:var(--sans);font-size:9px;color:var(--muted);text-align:left;padding:10px 8px;border-bottom:1px solid var(--border-mid);
+}
+.dim-table th:not(:first-child){text-align:center}
+.dim-table td{padding:12px 8px;border-bottom:1px solid var(--border);font-size:15px;color:var(--paper)}
+.dim-table td:not(:first-child){text-align:center;font-family:var(--sans);font-weight:bold}
+
+.gap-banner{padding:24px 28px;margin:28px 0;border-left:3px solid var(--gold)}
+.gap-banner.low{border-color:var(--green)}
+.gap-banner.moderate{border-color:var(--gold)}
+.gap-banner.high{border-color:#C48850}
+.gap-banner.critical{border-color:var(--red-bright)}
+.gap-zone{font-family:var(--sans);font-size:10px;color:var(--muted);margin-bottom:8px}
+.gap-title{font-size:20px;color:var(--paper);margin-bottom:10px}
+.gap-text{font-size:14.5px;color:var(--muted);line-height:1.65}
+
+.flag-banner{padding:18px 24px;margin:20px 0;font-family:var(--sans);font-size:12px;border:1px solid var(--border-mid)}
+.flag-banner.attention{border-color:#C48850;color:#D4A878}
+.flag-banner.critical{border-color:var(--red-bright);color:var(--red-bright)}
+.flag-banner.none{border-color:var(--green);color:var(--green)}
+
+.trigger-result-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);font-size:14px}
+.trigger-result-row:last-child{border-bottom:none}
+.tr-name{color:var(--paper-dim)}
+.tr-val{font-family:var(--sans);font-weight:bold;color:var(--muted);line-height:1.7;margin-top:32px}
+
+footer{border-top:1px solid var(--border);padding:22px 0;margin-top:40px}
+footer .wrap{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.f-brand{font-family:var(--sans);font-size:9px;color:var(--muted)}
+.f-copy{font-size:12px;color:#2E2E2E}
+
+@media(max-width:580px){
+  .wrap{padding:0 20px}
+  .screen{padding:40px 0}
+  .role-grid{grid-template-columns:1fr}
+  .scale-row{flex-wrap:wrap}
+  .scale-opt{min-width:56px}
+  .score-grid{grid-template-columns:1fr}
+  .nav-row{flex-direction:column;gap:16px;align-items:stretch}
+  .btn,.btn-secondary{width:100%;text-align:center}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <a href="https://decisionprotocol.com" class="logo">Decision Protocol</a>
+    <span class="tag">DSS QuickScan</span>
+  </div>
+</nav>
+
+<div class="wrap">
+
+  <!-- SCREEN 0: ENTRY -->
+  <div class="screen active" id="screen-entry">
+    <p class="eyebrow">Diagnostic rapid &middot; Dual Lens</p>
+    <h1>Doua perspective.<br>Un singur <em>scor.</em></h1>
+    <p class="sub">15 intrebari. Doi oameni. Cinci minute fiecare. Rezultatul arata diferenta dintre cum vezi tu mediul decizional si cum il vede cineva din afara.</p>
+
+    <div class="field-group">
+      <label class="field-label">Cod de evaluare</label>
+      <input type="text" class="field" id="eval-code" placeholder="ex: DSS-2026-001" autocomplete="off">
+      <p class="err-msg" id="code-err">Introdu codul de evaluare primit.</p>
+    </div>
+
+    <div class="field-group">
+      <label class="field-label">Rolul tau in aceasta evaluare</label>
+      <div class="role-grid">
+        <div class="role-card" data-role="internal" onclick="selectRole('internal')">
+          <p class="role-name">Lens A · Internal</p>
+          <p class="role-desc">Sunt persoana implicata direct in decizie. CEO, antreprenor, fondator, director, manager.</p>
+        </div>
+        <div class="role-card" data-role="external" onclick="selectRole('external')">
+          <p class="role-name">Lens B · External</p>
+          <p class="role-desc">Sunt observatorul profesionist. Avocat, wealth manager, notar, consultant, risk manager.</p>
+        </div>
+      </div>
+      <p class="err-msg" id="role-err">Selecteaza rolul tau pentru a continua.</p>
+    </div>
+
+    <button class="btn" onclick="startSurvey()">Incepe evaluarea &rarr;</button>
+
+    <p class="about-text">
+      Datele introduse sunt vizibile doar persoanelor care folosesc acelasi cod de evaluare.
+      Niciunul dintre participanti nu vede raspunsurile celuilalt inainte ca ambele evaluari sa fie complete.
+    </p>
+  </div>
+
+  <!-- SCREEN 1: SURVEY -->
+  <div class="screen" id="screen-survey">
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+    <div id="survey-content"></div>
+  </div>
+
+  <!-- SCREEN 2: WAITING -->
+  <div class="screen" id="screen-waiting">
+    <div class="wait-box">
+      <div class="wait-icon"><i></i>&#10003;</div>
+      <h1 style="font-size:26px;margin-bottom:16px">Evaluarea ta este inregistrata.</h1>
+      <p class="sub" style="margin-bottom:0">Raportul combinat apare automat cand cealalta persoana finalizeaza evaluarea sub acelasi cod.</p>
+      <div class="code-display" id="waiting-code"></div>
+      <p class="sub">Poti reveni pe acest link oricand si introduce codul ca sa verifici statusul.</p>
+      <button class="btn-secondary" onclick="checkAgain()">Verifica din nou &rarr;</button>
+    </div>
+  </div>
+
+  <!-- SCREEN 3: REPORT -->
+  <div class="screen" id="screen-report">
+    <p class="eyebrow">Raport DSS QuickScan</p>
+    <h1>Rezultatul <em>evaluarii.</em></h1>
+    <p class="sub" id="report-code-display"></p>
+
+    <div class="score-grid">
+      <div class="score-cell">
+        <p class="score-label">Internal DSS</p>
+        <p class="score-num" id="idss-display">--</p>
+      </div>
+      <div class="score-cell">
+        <p class="score-label">Observer DSS</p>
+        <p class="score-num" id="odss-display">--</p>
+      </div>
+    </div>
+
+    <table class="dim-table">
+      <thead><tr><th>Dimensiune</th><th>Internal</th><th>Observer</th></tr></thead>
+      <tbody id="dim-table-body"></tbody>
+    </table>
+
+    <div class="gap-banner" id="gap-banner">
+      <p class="gap-zone" id="gap-zone-label"></p>
+      <p class="gap-title" id="gap-title"></p>
+      <p class="gap-text" id="gap-text"></p>
+    </div>
+
+    <div id="trigger-section"></div>
+
+    <div style="display:flex;gap:12px;margin-top:32px;flex-wrap:wrap">
+      <button class="btn" onclick="resetTool()">Evaluare noua</button>
+    </div>
+
+    <p class="about-text">
+      Acest QuickScan este un instrument de screening rapid. Pentru o evaluare completa a mediului decizional,
+      cu 18 indicatori detaliati pe 4 domenii, contacteaza Decision Protocol pentru un diagnostic DEAF complet.
+    </p>
+  </div>
+
+</div>
+
+<footer>
+  <div class="wrap">
+    <span class="f-brand">Decision Protocol · decisionprotocol.com</span>
+    <span class="f-copy">&copy; 2026 Decision Protocol</span>
+  </div>
+</footer>
+
+<script>
+const DIMENSIONS = [
+  {
+    key: 'facts',
+    name: 'Facts',
+    desc: 'Integritatea informationala a mediului decizional',
+    questions: [
+      {id:'F1', text:'Informatiile importante ajung complet si la timp la persoanele care trebuie sa decida.'},
+      {id:'F2', text:'Persoanele implicate ofera informatii relevante chiar si atunci cand acestea sunt incomode.'},
+      {id:'F3', text:'Deciziile importante sunt luate dupa consultarea expertizei relevante.'},
+      {id:'F4', text:'In situatiile dificile exista o imagine clara si comuna asupra faptelor.'},
+      {id:'F5', text:'Problemele sunt investigate inainte de a se actiona asupra lor.'}
+    ]
+  },
+  {
+    key: 'alignment',
+    name: 'Alignment',
+    desc: 'Capacitatea sistemului de a converti informatia in directie comuna',
+    questions: [
+      {id:'A1', text:'Conversatiile dificile sunt abordate direct, nu amanate.'},
+      {id:'A2', text:'Persoanele implicate isi exprima ingrijorarile chiar si atunci cand acestea contrazic opinia dominanta.'},
+      {id:'A3', text:'Deciziile importante nu sunt intarziate prin cautarea excesiva de validari suplimentare.'},
+      {id:'A4', text:'Rezolvarea problemei este prioritizata in fata protejarii imaginii personale sau organizationale.'},
+      {id:'A5', text:'Dupa analiza, se ajunge relativ rapid la o directie clara.'}
+    ]
+  },
+  {
+    key: 'action',
+    name: 'Action',
+    desc: 'Integritatea executiei deciziilor luate',
+    questions: [
+      {id:'AC1', text:'Deciziile importante sunt implementate intr-un interval rezonabil de timp.'},
+      {id:'AC2', text:'Responsabilitatile pentru implementare sunt clare.'},
+      {id:'AC3', text:'Problemele aparent rezolvate rareori reapar.'},
+      {id:'AC4', text:'Exista urmarire si responsabilizare dupa luarea unei decizii.'},
+      {id:'AC5', text:'Situatiile dificile produc invatare, nu repetarea aceloraşi greseli.'}
+    ]
+  }
+];
+
+const SCALE_LABELS = ['Aproape niciodata','Rareori','Uneori','Frecvent','Aproape intotdeauna'];
+
+const TRIGGERS = [
+  {id:'T1', name:'Avoidance Behaviour', quote:'"Oamenii evita conversatiile dificile."'},
+  {id:'T2', name:'Information Concealment', quote:'"Informatii relevante sunt retinute sau apar tarziu."'},
+  {id:'T3', name:'Expert Bypass', quote:'"Se actioneaza inainte de consultarea expertizei."'},
+  {id:'T4', name:'Image Protection', quote:'"Imaginea este protejata inaintea rezolvarii problemei."'}
+];
+
+let state = {
+  code: '',
+  role: null,
+  answers: {},
+  triggerAnswers: {},
+  currentStep: 0
+};
+
+const ALL_QUESTIONS = DIMENSIONS.flatMap(d => d.questions.map(q => ({...q, dim: d.key, dimName: d.name, dimDesc: d.desc})));
+const TOTAL_STEPS_INTERNAL = ALL_QUESTIONS.length;
+const TOTAL_STEPS_EXTERNAL = ALL_QUESTIONS.length + TRIGGERS.length;
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function selectRole(role){
+  state.role = role;
+  document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
+  document.querySelector(`[data-role="${role}"]`).classList.add('selected');
+  document.getElementById('role-err').classList.remove('show');
+}
+
+async function startSurvey(){
+  const code = document.getElementById('eval-code').value.trim();
+  const codeErr = document.getElementById('code-err');
+  const roleErr = document.getElementById('role-err');
+  let valid = true;
+
+  if(!code){
+    document.getElementById('eval-code').classList.add('err');
+    codeErr.classList.add('show');
+    valid = false;
+  } else {
+    document.getElementById('eval-code').classList.remove('err');
+    codeErr.classList.remove('show');
+  }
+
+  if(!state.role){
+    roleErr.classList.add('show');
+    valid = false;
+  }
+
+  if(!valid) return;
+
+  state.code = code;
+  state.currentStep = 0;
+  state.answers = {};
+  state.triggerAnswers = {};
+
+  showScreen('screen-survey');
+  renderStep();
+}
+
+function renderStep(){
+  const total = state.role === 'internal' ? TOTAL_STEPS_INTERNAL : TOTAL_STEPS_EXTERNAL;
+  const pct = Math.round((state.currentStep / total) * 100);
+  document.getElementById('progress-fill').style.width = pct + '%';
+
+  const container = document.getElementById('survey-content');
+
+  if(state.currentStep < ALL_QUESTIONS.length){
+    const q = ALL_QUESTIONS[state.currentStep];
+    const isFirstOfDim = state.currentStep === 0 || ALL_QUESTIONS[state.currentStep - 1].dim !== q.dim;
+
+    let html = '';
+    if(isFirstOfDim){
+      html += `<div class="dim-header"><p class="dim-name">${q.dimName}</p><p class="dim-desc">${q.dimDesc}</p></div>`;
+    }
+
+    html += `<div class="q-block">
+      <p class="q-text">${q.text}</p>
+      <div class="scale-row" id="scale-${q.id}">
+        ${[1,2,3,4,5].map(n => `
+          <div class="scale-opt ${state.answers[q.id]===n?'selected':''}" onclick="answerQuestion('${q.id}', ${n})">
+            <span class="scale-num">${n}</span>
+            <span class="scale-label">${SCALE_LABELS[n-1]}</span>
+          </div>
+        `).join('')}
+      </div>
+    </div>`;
+
+    html += `<div class="nav-row">
+      ${state.currentStep > 0 ? '<button class="btn-secondary" onclick="prevStep()">&larr; Inapoi</button>' : '<span></span>'}
+      <button class="btn" id="next-btn" onclick="nextStep()" ${state.answers[q.id] ? '' : 'disabled'}>Continua &rarr;</button>
+    </div>`;
+
+    container.innerHTML = html;
+  } else if(state.role === 'external' && state.currentStep < ALL_QUESTIONS.length + TRIGGERS.length){
+    const tIdx = state.currentStep - ALL_QUESTIONS.length;
+    const t = TRIGGERS[tIdx];
+
+    let html = '';
+    if(tIdx === 0){
+      html += `<div class="dim-header"><p class="dim-name">Trigger Indicators</p><p class="dim-desc">Raspunde pe baza a ceea ce ai observat direct. Doar pentru Observator.</p></div>`;
+    }
+
+    html += `<div class="trigger-block">
+      <p class="trigger-tag">${t.id} · ${t.name}</p>
+      <p class="trigger-quote">${t.quote}</p>
+      <div class="tri-row">
+        <div class="tri-opt ${state.triggerAnswers[t.id]==='yes'?'selected':''}" onclick="answerTrigger('${t.id}','yes')">Da</div>
+        <div class="tri-opt ${state.triggerAnswers[t.id]==='no'?'selected':''}" onclick="answerTrigger('${t.id}','no')">Nu</div>
+        <div class="tri-opt ${state.triggerAnswers[t.id]==='na'?'selected':''}" onclick="answerTrigger('${t.id}','na')">Nu pot aprecia</div>
+      </div>
+    </div>`;
+
+    html += `<div class="nav-row">
+      <button class="btn-secondary" onclick="prevStep()">&larr; Inapoi</button>
+      <button class="btn" id="next-btn" onclick="nextStep()" ${state.triggerAnswers[t.id] ? '' : 'disabled'}>
+        ${tIdx === TRIGGERS.length - 1 ? 'Finalizeaza' : 'Continua'} &rarr;
+      </button>
+    </div>`;
+
+    container.innerHTML = html;
+  } else {
+    submitEvaluation();
+  }
+}
+
+function answerQuestion(qid, val){
+  state.answers[qid] = val;
+  document.querySelectorAll(`#scale-${qid} .scale-opt`).forEach((el,i) => {
+    el.classList.toggle('selected', i+1 === val);
+  });
+  document.getElementById('next-btn').disabled = false;
+}
+
+function answerTrigger(tid, val){
+  state.triggerAnswers[tid] = val;
+  renderStep();
+}
+
+function nextStep(){
+  state.currentStep++;
+  renderStep();
+}
+
+function prevStep(){
+  if(state.currentStep > 0){
+    state.currentStep--;
+    renderStep();
+  }
+}
+
+function calcDimScore(answers, dimKey){
+  const qs = DIMENSIONS.find(d => d.key === dimKey).questions;
+  const sum = qs.reduce((acc,q) => acc + (answers[q.id] || 0), 0);
+  return Math.round((sum / qs.length) * 20);
+}
+
+function calcTotalScore(answers){
+  const sum = ALL_QUESTIONS.reduce((acc,q) => acc + (answers[q.id] || 0), 0);
+  return Math.round((sum / ALL_QUESTIONS.length) * 20);
+}
+
+async function submitEvaluation(){
+  try {
+    const key = `dss:${state.code}:${state.role}`;
+    const payload = {
+      role: state.role,
+      answers: state.answers,
+      triggerAnswers: state.role === 'external' ? state.triggerAnswers : null,
+      timestamp: Date.now()
+    };
+    await window.storage.set(key, JSON.stringify(payload), true);
+
+    document.getElementById('waiting-code').textContent = state.code;
+    showScreen('screen-waiting');
+    await checkBothComplete();
+  } catch(e){
+    console.error('Submit error:', e);
+    alert('A aparut o eroare la salvare. Incearca din nou.');
+  }
+}
+
+async function checkAgain(){
+  await checkBothComplete();
+}
+
+async function checkBothComplete(){
+  try {
+    const internalKey = `dss:${state.code}:internal`;
+    const externalKey = `dss:${state.code}:external`;
+
+    let internalData = null, externalData = null;
+
+    try {
+      const r = await window.storage.get(internalKey, true);
+      if(r) internalData = JSON.parse(r.value);
+    } catch(e){}
+
+    try {
+      const r = await window.storage.get(externalKey, true);
+      if(r) externalData = JSON.parse(r.value);
+    } catch(e){}
+
+    if(internalData && externalData){
+      renderReport(internalData, externalData);
+      showScreen('screen-report');
+    }
+  } catch(e){
+    console.error('Check error:', e);
+  }
+}
+
+function renderReport(internalData, externalData){
+  const idss = calcTotalScore(internalData.answers);
+  const odss = calcTotalScore(externalData.answers);
+  const rgs = Math.abs(idss - odss);
+
+  document.getElementById('report-code-display').textContent = `Cod evaluare: ${state.code}`;
+  document.getElementById('idss-display').textContent = idss;
+  document.getElementById('odss-display').textContent = odss;
+
+  const dimRows = DIMENSIONS.map(d => {
+    const iScore = calcDimScore(internalData.answers, d.key);
+    const oScore = calcDimScore(externalData.answers, d.key);
+    return `<tr><td>${d.name}</td><td>${iScore}</td><td>${oScore}</td></tr>`;
+  }).join('');
+  document.getElementById('dim-table-body').innerHTML = dimRows +
+    `<tr><td style="font-weight:bold;color:var(--gold)">DSS Total</td><td style="font-weight:bold;color:var(--gold)">${idss}</td><td style="font-weight:bold;color:var(--gold)">${odss}</td></tr>`;
+
+  let gapZone, gapClass, gapTitle, gapText;
+  if(rgs <= 10){
+    gapZone = 'Low Gap'; gapClass = 'low';
+    gapTitle = 'Perceptii aliniate.';
+    gapText = 'Diferenta dintre perceptia interna si observatia externa este minima. Cele doua perspective converg.';
+  } else if(rgs <= 20){
+    gapZone = 'Moderate Gap'; gapClass = 'moderate';
+    gapTitle = 'Diferente observabile.';
+    gapText = 'Exista o diferenta intre cum este perceput mediul decizional intern si cum este observat din exterior. Merita explorata inainte de momentele decizionale critice.';
+  } else if(rgs <= 30){
+    gapZone = 'High Gap'; gapClass = 'high';
+    gapTitle = 'Perceptii semnificativ diferite.';
+    gapText = 'Diferenta semnificativa intre perceptia interna si observatia externa sugereaza posibile probleme de awareness. Anumite riscuri pot ramane neadresate pana la aparitia unor consecinte operationale sau juridice.';
+  } else {
+    gapZone = 'Critical Gap'; gapClass = 'critical';
+    gapTitle = 'Realitati paralele.';
+    gapText = 'Probabilitate ridicata de avoidance, denial, information distortion si expert bypass. Recomandam o sesiune de calibrare a perceptiei inainte de orice interventie de stabilizare propriu-zisa.';
+  }
+
+  document.getElementById('gap-banner').className = `gap-banner ${gapClass}`;
+  document.getElementById('gap-zone-label').textContent = `Reality Gap Score: ${rgs} · ${gapZone}`;
+  document.getElementById('gap-title').textContent = gapTitle;
+  document.getElementById('gap-text').textContent = gapText;
+
+  let triggerHTML = '';
+  if(externalData.triggerAnswers){
+    const yesCount = Object.values(externalData.triggerAnswers).filter(v => v === 'yes').length;
+    let flagClass, flagText;
+    if(yesCount >= 3){
+      flagClass = 'critical'; flagText = `CRITICAL FLAG: ${yesCount} din 4 triggeri confirmati`;
+    } else if(yesCount === 2){
+      flagClass = 'attention'; flagText = `ATTENTION FLAG: ${yesCount} din 4 triggeri confirmati`;
+    } else {
+      flagClass = 'none'; flagText = `Fara flag: ${yesCount} din 4 triggeri confirmati`;
+    }
+
+    triggerHTML = `<h2 style="font-size:18px;margin:32px 0 16px;color:var(--paper)">Trigger Indicators</h2>
+      <div class="flag-banner ${flagClass}">${flagText}</div>`;
+
+    TRIGGERS.forEach(t => {
+      const val = externalData.triggerAnswers[t.id];
+      const label = val === 'yes' ? 'Da' : val === 'no' ? 'Nu' : 'Nu pot aprecia';
+      const cls = val === 'yes' ? 'yes' : val === 'no' ? 'no' : 'na';
+      triggerHTML += `<div class="trigger-result-row"><span class="tr-name">${t.name}</span><span class="tr-val ${cls}">${label}</span></div>`;
+    });
+  }
+  document.getElementById('trigger-section').innerHTML = triggerHTML;
+
+  window._reportData = {idss, odss, rgs, gapZone, gapTitle, gapText, internalData, externalData, code: state.code};
+}
+
+function resetTool(){
+  state = {code:'', role:null, answers:{}, triggerAnswers:{}, currentStep:0};
+  document.getElementById('eval-code').value = '';
+  document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
+  showScreen('screen-entry');
+}
+</script>
+
+</body>
+</html>
