@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<title>DSS QuickScan Dual Lens | Decision Protocol</title>
+<meta name="description" content="Evaluare rapida a mediului decizional. Doua perspective, un scor, un raport.">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --black:#080808;
+  --surface:#0F0F0F;
+  --card:#141414;
+  --border:#1E1E1E;
+  --border-mid:#2A2A2A;
+  --paper:#F0EDE6;
+  --paper-dim:#B8B4AC;
+  --muted:#6A6660;
+  --gold:#C4A862;
+  --gold-hover:#D4B872;
+  --red:#9B3535;
+  --red-bright:#C45050;
+  --green:#5E8A6B;
+  --serif:'Open Sans',Arial,sans-serif;
+  --sans:'Open Sans',Arial,sans-serif;
+}
+
+html{scroll-behavior:smooth}
+body{
+  background:var(--black);color:var(--paper);
+  font-family:var(--serif);font-size:17px;line-height:1.7;
+  -webkit-font-smoothing:antialiased;
+}
+
+.wrap{max-width:680px;margin:0 auto;padding:0 28px}
+
+nav{border-bottom:1px solid var(--border);padding:18px 0}
+nav .wrap{display:flex;align-items:center;justify-content:space-between}
+.logo{font-family:var(--sans);font-size:10px;color:var(--gold);text-decoration:none}
+.tag{font-family:var(--sans);font-size:9px;color:var(--muted)}
+
+.screen{display:none;padding:56px 0}
+.screen.active{display:block}
+
+.eyebrow{font-family:var(--sans);font-size:9px;color:var(--gold);margin-bottom:20px;display:flex;align-items:center;gap:14px}
+.eyebrow::after{content:'';flex:1;height:1px;background:var(--border-mid)}
+
+h1{font-family:var(--serif);font-weight:normal;font-size:clamp(28px,5vw,42px);line-height:1.18;color:var(--paper);margin-bottom:14px}
+h1 em{color:var(--gold)}
+.sub{font-size:15px;color:var(--muted);line-height:1.6;margin-bottom:36px}
+
+.track-grid{display:grid;gap:12px;margin:32px 0}
+.track-card{
+  background:var(--surface);border:1px solid var(--border-mid);
+  padding:22px 22px;cursor:pointer;transition:border-color .15s,background .15s;
+  text-align:left;display:flex;align-items:flex-start;gap:16px;
+}
+.track-card:hover{border-color:var(--gold-hover);background:var(--card)}
+.track-card.selected{border-color:var(--gold);background:var(--card)}
+.track-letter{
+  font-family:var(--sans);font-size:22px;font-weight:bold;color:var(--gold);
+  flex-shrink:0;width:36px;
+}
+.track-body{flex:1}
+.track-name{font-family:var(--sans);font-size:13px;font-weight:bold;color:var(--paper);margin-bottom:6px}
+.track-desc{font-size:13.5px;color:var(--muted);line-height:1.5}
+
+.role-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:32px 0}
+.role-card{
+  background:var(--surface);border:1px solid var(--border-mid);
+  padding:24px 20px;cursor:pointer;transition:border-color .15s,background .15s;
+  text-align:left;
+}
+.role-card:hover{border-color:var(--gold-hover);background:var(--card)}
+.role-card.selected{border-color:var(--gold);background:var(--card)}
+.role-name{font-family:var(--sans);font-size:11px;font-weight:bold;color:var(--gold);margin-bottom:8px}
+.role-desc{font-size:13.5px;color:var(--muted);line-height:1.55}
+
+.field-group{margin-bottom:24px}
+.field-label{font-family:var(--sans);font-size:9px;color:var(--muted);margin-bottom:10px;display:block}
+.field{
+  width:100%;background:var(--black);border:1px solid var(--border-mid);
+  color:var(--paper);font-family:var(--serif);font-size:16px;
+  padding:14px 16px;outline:none;transition:border-color .15s;
+}
+.field::placeholder{color:#3A3A3A}
+.field:focus{border-color:var(--gold)}
+.field.err{border-color:var(--red)}
+
+.btn{
+  background:var(--gold);color:var(--black);border:none;cursor:pointer;
+  font-family:var(--sans);font-size:11px;font-weight:bold;
+  padding:15px 32px;transition:background .15s;-webkit-appearance:none;
+}
+.btn:hover{background:var(--gold-hover)}
+.btn:disabled{background:#3A3A3A;color:#666;cursor:not-allowed}
+.btn-secondary{
+  background:transparent;color:var(--paper-dim);border:1px solid var(--border-mid);
+  font-family:var(--sans);font-size:11px;font-weight:bold;
+  padding:14px 28px;cursor:pointer;transition:all .15s;
+}
+.btn-secondary:hover{border-color:var(--gold);color:var(--gold)}
+.btn-back{
+  background:transparent;color:var(--muted);border:none;
+  font-family:var(--sans);font-size:11px;cursor:pointer;
+  padding:8px 0;margin-bottom:20px;display:inline-flex;align-items:center;gap:6px;
+}
+.btn-back:hover{color:var(--gold)}
+
+.err-msg{display:none;color:var(--red-bright);font-size:13px;margin-top:8px}
+.err-msg.show{display:block}
+
+.progress-bar{height:2px;background:var(--border);margin-bottom:40px;position:relative}
+.progress-fill{height:2px;background:var(--gold);width:0%;transition:width .25s}
+
+.dim-header{margin-bottom:28px}
+.dim-name{font-family:var(--sans);font-size:9px;color:var(--gold);margin-bottom:6px}
+.dim-desc{font-size:14px;color:var(--muted)}
+
+.q-block{margin-bottom:36px;padding-bottom:32px;border-bottom:1px solid var(--border)}
+.q-block:last-child{border-bottom:none}
+.q-text{font-size:16.5px;color:var(--paper);line-height:1.6;margin-bottom:18px}
+.scale-row{display:flex;gap:8px;justify-content:space-between}
+.scale-opt{
+  flex:1;background:var(--surface);border:1px solid var(--border-mid);
+  padding:12px 4px;text-align:center;cursor:pointer;transition:all .15s;
+}
+.scale-opt:hover{border-color:var(--gold-hover)}
+.scale-opt.selected{border-color:var(--gold);background:var(--card)}
+.scale-num{font-family:var(--sans);font-size:15px;font-weight:bold;color:var(--paper);display:block;margin-bottom:3px}
+.scale-opt.selected .scale-num{color:var(--gold)}
+.scale-label{font-size:9.5px;color:var(--muted);line-height:1.2;display:block}
+
+.trigger-block{margin-bottom:28px;padding-bottom:24px;border-bottom:1px solid var(--border)}
+.trigger-block:last-child{border-bottom:none}
+.trigger-tag{font-family:var(--sans);font-size:9px;color:var(--gold);margin-bottom:8px}
+.trigger-quote{font-size:15px;color:var(--paper-dim);line-height:1.55;margin-bottom:16px}
+.tri-row{display:flex;gap:10px}
+.tri-opt{
+  flex:1;background:var(--surface);border:1px solid var(--border-mid);
+  padding:12px 8px;text-align:center;cursor:pointer;font-family:var(--sans);
+  font-size:11px;color:var(--muted);transition:all .15s;
+}
+.tri-opt:hover{border-color:var(--gold-hover)}
+.tri-opt.selected{border-color:var(--gold);background:var(--card);color:var(--gold)}
+
+.nav-row{display:flex;justify-content:space-between;align-items:center;margin-top:40px}
+
+.wait-box{text-align:center;padding:48px 24px}
+.wait-icon{
+  width:48px;height:48px;border:1px solid var(--gold);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;margin:0 auto 24px;
+  color:var(--gold);font-size:20px;
+}
+.code-display{
+  font-family:var(--sans);font-size:24px;color:var(--gold);
+  margin:20px 0;padding:16px;background:var(--surface);border:1px solid var(--border-mid);
+}
+
+.score-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);margin:32px 0}
+.score-cell{background:var(--card);padding:24px 20px;text-align:center}
+.score-label{font-family:var(--sans);font-size:9px;color:var(--muted);margin-bottom:10px}
+.score-num{font-size:38px;color:var(--gold);line-height:1}
+
+.dim-table{width:100%;border-collapse:collapse;margin:24px 0}
+.dim-table th{
+  font-family:var(--sans);font-size:9px;color:var(--muted);
+  text-align:left;padding:10px 8px;border-bottom:1px solid var(--border-mid);
+}
+.dim-table th:not(:first-child){text-align:center}
+.dim-table td{padding:12px 8px;border-bottom:1px solid var(--border);font-size:15px;color:var(--paper)}
+.dim-table td:not(:first-child){text-align:center;font-family:var(--sans);font-weight:bold}
+
+.gap-banner{padding:24px 28px;margin:28px 0;border-left:3px solid var(--gold)}
+.gap-banner.low{border-color:var(--green)}
+.gap-banner.moderate{border-color:var(--gold)}
+.gap-banner.high{border-color:#C48850}
+.gap-banner.critical{border-color:var(--red-bright)}
+.gap-zone{font-family:var(--sans);font-size:10px;color:var(--muted);margin-bottom:8px}
+.gap-title{font-size:20px;color:var(--paper);margin-bottom:10px}
+.gap-text{font-size:14.5px;color:var(--muted);line-height:1.65}
+
+.flag-banner{padding:18px 24px;margin:20px 0;font-family:var(--sans);font-size:12px;border:1px solid var(--border-mid)}
+.flag-banner.attention{border-color:#C48850;color:#D4A878}
+.flag-banner.critical{border-color:var(--red-bright);color:var(--red-bright)}
+.flag-banner.none{border-color:var(--green);color:var(--green)}
+
+.trigger-result-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);font-size:14px}
+.trigger-result-row:last-child{border-bottom:none}
+.tr-name{color:var(--paper-dim)}
+.tr-val{font-family:var(--sans);font-weight:bold}
+.tr-val.yes{color:var(--red-bright)}
+.tr-val.no{color:var(--green)}
+.tr-val.na{color:var(--muted)}
+
+.about-text{font-size:13.5px;color:var(--muted);line-height:1.7;margin-top:32px}
+
+footer{border-top:1px solid var(--border);padding:22px 0;margin-top:40px}
+footer .wrap{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.f-brand{font-family:var(--sans);font-size:9px;color:var(--muted)}
+.f-copy{font-size:12px;color:#2E2E2E}
+
+@media(max-width:580px){
+  .wrap{padding:0 20px}
+  .screen{padding:40px 0}
+  .role-grid{grid-template-columns:1fr}
+  .scale-row{flex-wrap:wrap}
+  .scale-opt{min-width:56px}
+  .score-grid{grid-template-columns:1fr}
+  .nav-row{flex-direction:column;gap:16px;align-items:stretch}
+  .btn,.btn-secondary{width:100%;text-align:center}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <a href="https://decisionprotocol.com" class="logo">Decision Protocol</a>
+    <span class="tag">DSS QuickScan</span>
+  </div>
+</nav>
+
+<div class="wrap">
+
+  <div class="screen active" id="screen-track">
+    <p class="eyebrow">Diagnostic rapid &middot; Dual Lens</p>
+    <h1>Pentru cine este<br>acest <em>test?</em></h1>
+    <p class="sub">Alege contextul potrivit. Intrebarile se adapteaza, dar masuratoarea ramane aceeasi: doua perspective, un singur scor.</p>
+
+    <div class="track-grid">
+      <div class="track-card" data-track="A" onclick="selectTrack('A')">
+        <span class="track-letter">A</span>
+        <div class="track-body">
+          <p class="track-name">Enterprise / Governance</p>
+          <p class="track-desc">Board, comitet de risc, Internal Audit, C-suite. Decizii institutionale, guvernanta AI, compliance.</p>
+        </div>
+      </div>
+      <div class="track-card" data-track="B" onclick="selectTrack('B')">
+        <span class="track-letter">B</span>
+        <div class="track-body">
+          <p class="track-name">Practica Profesionala</p>
+          <p class="track-desc">Avocat, notar, wealth manager. Decizii ale clientilor in tranzactii, succesiuni, restructurari.</p>
+        </div>
+      </div>
+      <div class="track-card" data-track="C" onclick="selectTrack('C')">
+        <span class="track-letter">C</span>
+        <div class="track-body">
+          <p class="track-name">Operatiuni / Echipe</p>
+          <p class="track-desc">Clinica, hotel, organizatie de servicii. Decizii operationale sub presiunea interactiunii zilnice cu clientii.</p>
+        </div>
+      </div>
+    </div>
+
+    <p class="err-msg" id="track-err">Selecteaza un context pentru a continua.</p>
+    <button class="btn" onclick="goToEntry()">Continua &rarr;</button>
+  </div>
+
+  <div class="screen" id="screen-entry">
+    <button class="btn-back" onclick="backToTrack()">&larr; Schimba contextul</button>
+    <p class="eyebrow" id="entry-eyebrow">Diagnostic rapid &middot; Dual Lens</p>
+    <h1 id="entry-title">Doua perspective.<br>Un singur <em>scor.</em></h1>
+    <p class="sub" id="entry-sub">15 intrebari. Doi oameni. Cinci minute fiecare.</p>
+
+    <div class="field-group">
+      <label class="field-label">Cod de evaluare</label>
+      <input type="text" class="field" id="eval-code" placeholder="ex: DSS-2026-001" autocomplete="off">
+      <p class="err-msg" id="code-err">Introdu codul de evaluare primit.</p>
+    </div>
+
+    <div class="field-group">
+      <label class="field-label">Rolul tau in aceasta evaluare</label>
+      <div class="role-grid" id="role-grid"></div>
+      <p class="err-msg" id="role-err">Selecteaza rolul tau pentru a continua.</p>
+    </div>
+
+    <button class="btn" onclick="startSurvey()">Incepe evaluarea &rarr;</button>
+
+    <p class="about-text">
+      Datele introduse sunt vizibile doar persoanelor care folosesc acelasi cod de evaluare.
+      Niciunul dintre participanti nu vede raspunsurile celuilalt inainte ca ambele evaluari sa fie complete.
+    </p>
+  </div>
+
+  <div class="screen" id="screen-survey">
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+    <div id="survey-content"></div>
+  </div>
+
+  <div class="screen" id="screen-waiting">
+    <div class="wait-box">
+      <div class="wait-icon">&#10003;</div>
+      <h1 style="font-size:26px;margin-bottom:16px">Evaluarea ta este inregistrata.</h1>
+      <p class="sub" style="margin-bottom:0">Raportul combinat apare automat cand cealalta persoana finalizeaza evaluarea sub acelasi cod.</p>
+      <div class="code-display" id="waiting-code"></div>
+      <p class="sub">Poti reveni pe acest link oricand si introduce codul ca sa verifici statusul.</p>
+      <button class="btn-secondary" onclick="checkAgain()">Verifica din nou &rarr;</button>
+    </div>
+  </div>
+
+  <div class="screen" id="screen-report">
+    <p class="eyebrow">Raport DSS QuickScan</p>
+    <h1>Rezultatul <em>evaluarii.</em></h1>
+    <p class="sub" id="report-code-display"></p>
+
+    <div class="score-grid">
+      <div class="score-cell">
+        <p class="score-label">Internal DSS</p>
+        <p class="score-num" id="idss-display">--</p>
+      </div>
+      <div class="score-cell">
+        <p class="score-label">Observer DSS</p>
+        <p class="score-num" id="odss-display">--</p>
+      </div>
+    </div>
+
+    <table class="dim-table">
+      <thead><tr><th>Dimensiune</th><th>Internal</th><th>Observer</th></tr></thead>
+      <tbody id="dim-table-body"></tbody>
+    </table>
+
+    <div class="gap-banner" id="gap-banner">
+      <p class="gap-zone" id="gap-zone-label"></p>
+      <p class="gap-title" id="gap-title"></p>
+      <p class="gap-text" id="gap-text"></p>
+    </div>
+
+    <div id="trigger-section"></div>
+
+    <div style="display:flex;gap:12px;margin-top:32px;flex-wrap:wrap">
+      <button class="btn" onclick="resetTool()">Evaluare noua</button>
+    </div>
+
+    <p class="about-text">
+      Acest QuickScan este un instrument de screening rapid. Pentru o evaluare completa a mediului decizional,
+      cu 18 indicatori detaliati pe 4 domenii, contacteaza Decision Protocol pentru un diagnostic DEAF complet.
+    </p>
+  </div>
+
+</div>
+
+<footer>
+  <div class="wrap">
+    <span class="f-brand">Decision Protocol</span>
+    <span class="f-copy">&copy; 2026 Decision Protocol</span>
+  </div>
+</footer>
+
+<script>
+const SCALE_LABELS = ['Aproape niciodata','Rareori','Uneori','Frecvent','Aproape intotdeauna'];
+
+const TRACKS = {
+
+  A: {
+    name: 'Enterprise / Governance',
+    eyebrow: 'Track A &middot; Enterprise / Governance',
+    title: 'Doua perspective.<br>Un singur <em>scor.</em>',
+    sub: 'Evalueaza mediul decizional al organizatiei tale in fata deciziilor cu mize ridicate, inclusiv cele augmentate de AI.',
+    roles: {
+      internal: { name: 'Lens A &middot; Internal', desc: 'Sunt parte din comitetul de decizie. Board member, Risk Manager, CFO, CEO, Director General.' },
+      external: { name: 'Lens B &middot; External', desc: 'Sunt observatorul. Internal Auditor, Consultant Governance, Risk Advisor.' }
+    },
+    dimensions: [
+      {
+        key: 'facts', name: 'Facts', desc: 'Integritatea informationala in procesul de governance',
+        questions: [
+          {id:'F1', text:'Informatiile critice de risc ajung complet si la timp la comitetul sau boardul care decide.'},
+          {id:'F2', text:'Recomandarile generate de AI sau de analisti sunt evaluate critic, nu doar aprobate, inainte de o decizie majora.'},
+          {id:'F3', text:'Deciziile importante sunt luate dupa consultarea expertizei interne relevante (risc, juridic, compliance).'},
+          {id:'F4', text:'Exista o imagine clara si comuna asupra faptelor in interiorul comitetului de decizie, fara informatii fragmentate intre departamente.'},
+          {id:'F5', text:'Semnalele de risc sunt investigate inainte de a fi clasificate drept zgomot sau exceptii minore.'}
+        ]
+      },
+      {
+        key: 'alignment', name: 'Alignment', desc: 'Capacitatea organizatiei de a converti analiza in directie comuna',
+        questions: [
+          {id:'A1', text:'Pozitiile divergente sau dizidente sunt exprimate deschis in sedintele de comitet, nu suprimate de consens.'},
+          {id:'A2', text:'Membrii comitetului isi exprima ingrijorarile chiar si atunci cand acestea contrazic directia preferata de conducere.'},
+          {id:'A3', text:'Deciziile importante nu sunt intarziate prin cautarea excesiva de analize sau validari suplimentare.'},
+          {id:'A4', text:'Protejarea reputatiei institutionale nu ia prioritate in fata adresarii reale a unei probleme de risc.'},
+          {id:'A5', text:'Dupa o sedinta de analiza a riscului, se ajunge relativ rapid la o directie clara de actiune.'}
+        ]
+      },
+      {
+        key: 'action', name: 'Action', desc: 'Integritatea executiei deciziilor de guvernanta',
+        questions: [
+          {id:'AC1', text:'Deciziile de risc si compliance sunt implementate intr-un interval de timp rezonabil, nu doar documentate.'},
+          {id:'AC2', text:'Responsabilitatea pentru implementarea unei decizii este clar atribuita unei persoane sau functii.'},
+          {id:'AC3', text:'Riscurile aparent rezolvate sau remediate rareori reapar in rapoartele urmatoare.'},
+          {id:'AC4', text:'Exista un mecanism activ de urmarire si responsabilizare dupa o decizie de guvernanta majora.'},
+          {id:'AC5', text:'Incidentele sau aproape-incidentele produc schimbari reale de proces, nu doar rapoarte de incident.'}
+        ]
+      }
+    ],
+    triggers: [
+      {id:'T1', name:'Avoidance Behaviour', quote:'"Comitetul evita sa puna intrebari incomode despre risc."'},
+      {id:'T2', name:'Information Concealment', quote:'"Informatii relevante de risc sunt retinute sau apar tarziu in raportare."'},
+      {id:'T3', name:'Expert Bypass', quote:'"Se actioneaza sau se aproba inainte de evaluarea completa a riscului."'},
+      {id:'T4', name:'Image Protection', quote:'"Reputatia institutionala este protejata inaintea rezolvarii reale a problemei."'}
+    ]
+  },
+
+  B: {
+    name: 'Practica Profesionala',
+    eyebrow: 'Track B &middot; Practica Profesionala',
+    title: 'Doua perspective.<br>Un singur <em>scor.</em>',
+    sub: 'Evalueaza mediul decizional al unui client in fata unei decizii ireversibile.',
+    roles: {
+      internal: { name: 'Lens A &middot; Internal', desc: 'Sunt persoana implicata direct in decizie. CEO, antreprenor, fondator, director, manager.' },
+      external: { name: 'Lens B &middot; External', desc: 'Sunt observatorul profesionist. Avocat, wealth manager, notar, consultant.' }
+    },
+    dimensions: [
+      {
+        key: 'facts', name: 'Facts', desc: 'Integritatea informationala a mediului decizional',
+        questions: [
+          {id:'F1', text:'Informatiile importante ajung complet si la timp la persoanele care trebuie sa decida.'},
+          {id:'F2', text:'Persoanele implicate ofera informatii relevante chiar si atunci cand acestea sunt incomode.'},
+          {id:'F3', text:'Deciziile importante sunt luate dupa consultarea expertizei relevante.'},
+          {id:'F4', text:'In situatiile dificile exista o imagine clara si comuna asupra faptelor.'},
+          {id:'F5', text:'Problemele sunt investigate inainte de a se actiona asupra lor.'}
+        ]
+      },
+      {
+        key: 'alignment', name: 'Alignment', desc: 'Capacitatea sistemului de a converti informatia in directie comuna',
+        questions: [
+          {id:'A1', text:'Conversatiile dificile sunt abordate direct, nu amanate.'},
+          {id:'A2', text:'Persoanele implicate isi exprima ingrijorarile chiar si atunci cand acestea contrazic opinia dominanta.'},
+          {id:'A3', text:'Deciziile importante nu sunt intarziate prin cautarea excesiva de validari suplimentare.'},
+          {id:'A4', text:'Rezolvarea problemei este prioritizata in fata protejarii imaginii personale sau organizationale.'},
+          {id:'A5', text:'Dupa analiza, se ajunge relativ rapid la o directie clara.'}
+        ]
+      },
+      {
+        key: 'action', name: 'Action', desc: 'Integritatea executiei',
+        questions: [
+          {id:'AC1', text:'Deciziile importante sunt implementate intr-un interval rezonabil de timp.'},
+          {id:'AC2', text:'Responsabilitatile pentru implementare sunt clare.'},
+          {id:'AC3', text:'Problemele rezolvate nu reapar.'},
+          {id:'AC4', text:'Exista urmarire si responsabilizare dupa luarea unei decizii.'},
+          {id:'AC5', text:'Situatiile dificile produc invatare, nu repetarea aceloraşi greseli.'}
+        ]
+      }
+    ],
+    triggers: [
+      {id:'T1', name:'Avoidance Behaviour', quote:'"Oamenii evita conversatiile dificile."'},
+      {id:'T2', name:'Information Concealment', quote:'"Informatii relevante sunt retinute sau apar tarziu."'},
+      {id:'T3', name:'Expert Bypass', quote:'"Se actioneaza inainte de consultarea expertizei."'},
+      {id:'T4', name:'Image Protection', quote:'"Imaginea este protejata inaintea rezolvarii problemei."'}
+    ]
+  },
+
+  C: {
+    name: 'Operatiuni / Echipe',
+    eyebrow: 'Track C &middot; Operatiuni / Echipe',
+    title: 'Doua perspective.<br>Un singur <em>scor.</em>',
+    sub: 'Evalueaza mediul decizional al echipei tale in momentele de presiune cu clienti sau pacienti dificili.',
+    roles: {
+      internal: { name: 'Lens A &middot; Internal', desc: 'Sunt manager sau director operational implicat direct. Manager clinica, GM hotel, director operatiuni.' },
+      external: { name: 'Lens B &middot; External', desc: 'Sunt observatorul din afara. Coleg senior, consultant, specialist Crisis IQ.' }
+    },
+    dimensions: [
+      {
+        key: 'facts', name: 'Facts', desc: 'Integritatea informationala in situatiile dificile cu clienti',
+        questions: [
+          {id:'F1', text:'Incidentele cu pacienti sau clienti dificili sunt raportate complet si la timp catre management.'},
+          {id:'F2', text:'Echipa raporteaza onest situatiile dificile, chiar si atunci cand le-au gestionat sub-optim.'},
+          {id:'F3', text:'Deciziile in situatii tensionate nu sunt luate izolat ci cu sprijinul unui coleg senior sau folosind protocol.'},
+          {id:'F4', text:'Exista o imagine clara si comuna intre colegi despre ce s-a intamplat intr-un incident dificil.'},
+          {id:'F5', text:'Pattern-urile de incidente recurente sunt investigate, nu tratate ca intamplari izolate.'}
+        ]
+      },
+      {
+        key: 'alignment', name: 'Alignment', desc: 'Capacitatea echipei de a converti experienta in raspuns comun',
+        questions: [
+          {id:'A1', text:'Conversatiile dificile despre un incident sunt abordate direct in echipa, nu evitate.'},
+          {id:'A2', text:'Membrii echipei isi exprima ingrijorarile despre o situatie chiar daca managerul nu vrea sa le auda.'},
+          {id:'A3', text:'Deciziile despre cum se gestioneaza un client dificil nu sunt amanate la infinit.'},
+          {id:'A4', text:'Rezolvarea reala a problemei conteaza mai mult decat evitarea unei recenzii negative.'},
+          {id:'A5', text:'Dupa un incident, echipa ajunge relativ rapid la un raspuns clar si comun.'}
+        ]
+      },
+      {
+        key: 'action', name: 'Action', desc: 'Integritatea executiei protocoalelor in conditii de presiune',
+        questions: [
+          {id:'AC1', text:'Protocoalele de gestionare a situatiilor dificile sunt aplicate efectiv, nu doar cunoscute teoretic.'},
+          {id:'AC2', text:'Este clar cine este responsabil sa intervina cand o situatie escaleaza.'},
+          {id:'AC3', text:'Tipurile de incidente care apar rareori se repeta in forma identica.'},
+          {id:'AC4', text:'Exista un debrief sau o urmarire reala dupa incidentele dificile, nu doar inchiderea dosarului.'},
+          {id:'AC5', text:'Incidentele produc schimbari reale in protocol, nu doar discutii fara urmare.'}
+        ]
+      }
+    ],
+    triggers: [
+      {id:'T1', name:'Avoidance Behaviour', quote:'"Echipa evita sa vorbeasca direct despre ce nu a functionat."'},
+      {id:'T2', name:'Information Concealment', quote:'"Detalii despre un incident apar incomplete sau cu intarziere catre management."'},
+      {id:'T3', name:'Expert Bypass', quote:'"Se actioneaza izolat in situatii tensionate, fara sa se ceara sprijin senior la timp."'},
+      {id:'T4', name:'Image Protection', quote:'"Evitarea unei recenzii negative conteaza mai mult decat rezolvarea reala a problemei."'}
+    ]
+  }
+};
+
+let state = {
+  track: null,
+  code: '',
+  role: null,
+  answers: {},
+  triggerAnswers: {},
+  currentStep: 0
+};
+
+const GSCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwaDGcIVe3I5QXeYRDn4Z0PTqewQXjdQ4C2s5C-m-9ZHyPcjro8agphCRbnJ3hLKOpw/exec';
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function selectTrack(trackKey){
+  state.track = trackKey;
+  document.querySelectorAll('.track-card').forEach(c => c.classList.remove('selected'));
+  document.querySelector(`[data-track="${trackKey}"]`).classList.add('selected');
+  document.getElementById('track-err').classList.remove('show');
+}
+
+function goToEntry(){
+  if(!state.track){
+    document.getElementById('track-err').classList.add('show');
+    return;
+  }
+
+  const cfg = TRACKS[state.track];
+  document.getElementById('entry-eyebrow').innerHTML = cfg.eyebrow;
+  document.getElementById('entry-title').innerHTML = cfg.title;
+  document.getElementById('entry-sub').textContent = cfg.sub;
+
+  const roleGrid = document.getElementById('role-grid');
+  roleGrid.innerHTML = `
+    <div class="role-card" data-role="internal" onclick="selectRole('internal')">
+      <p class="role-name">${cfg.roles.internal.name}</p>
+      <p class="role-desc">${cfg.roles.internal.desc}</p>
+    </div>
+    <div class="role-card" data-role="external" onclick="selectRole('external')">
+      <p class="role-name">${cfg.roles.external.name}</p>
+      <p class="role-desc">${cfg.roles.external.desc}</p>
+    </div>
+  `;
+
+  showScreen('screen-entry');
+}
+
+function backToTrack(){
+  state.role = null;
+  document.getElementById('eval-code').value = '';
+  showScreen('screen-track');
+}
+
+function selectRole(role){
+  state.role = role;
+  document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
+  document.querySelector(`[data-role="${role}"]`).classList.add('selected');
+  document.getElementById('role-err').classList.remove('show');
+}
+
+async function startSurvey(){
+  const code = document.getElementById('eval-code').value.trim();
+  const codeErr = document.getElementById('code-err');
+  const roleErr = document.getElementById('role-err');
+  let valid = true;
+
+  if(!code){
+    document.getElementById('eval-code').classList.add('err');
+    codeErr.classList.add('show');
+    valid = false;
+  } else {
+    document.getElementById('eval-code').classList.remove('err');
+    codeErr.classList.remove('show');
+  }
+
+  if(!state.role){
+    roleErr.classList.add('show');
+    valid = false;
+  }
+
+  if(!valid) return;
+
+  state.code = code;
+  state.currentStep = 0;
+  state.answers = {};
+  state.triggerAnswers = {};
+
+  showScreen('screen-survey');
+  renderStep();
+}
+
+function getAllQuestions(){
+  const cfg = TRACKS[state.track];
+  return cfg.dimensions.flatMap(d => d.questions.map(q => ({...q, dim: d.key, dimName: d.name, dimDesc: d.desc})));
+}
+
+function renderStep(){
+  const cfg = TRACKS[state.track];
+  const allQuestions = getAllQuestions();
+  const triggers = cfg.triggers;
+  const totalSteps = state.role === 'internal' ? allQuestions.length : allQuestions.length + triggers.length;
+  const pct = Math.round((state.currentStep / totalSteps) * 100);
+  document.getElementById('progress-fill').style.width = pct + '%';
+
+  const container = document.getElementById('survey-content');
+
+  if(state.currentStep < allQuestions.length){
+    const q = allQuestions[state.currentStep];
+    const isFirstOfDim = state.currentStep === 0 || allQuestions[state.currentStep - 1].dim !== q.dim;
+
+    let html = '';
+    if(isFirstOfDim){
+      html += `<div class="dim-header"><p class="dim-name">${q.dimName}</p><p class="dim-desc">${q.dimDesc}</p></div>`;
+    }
+
+    html += `<div class="q-block">
+      <p class="q-text">${q.text}</p>
+      <div class="scale-row" id="scale-${q.id}">
+        ${[1,2,3,4,5].map(n => `
+          <div class="scale-opt ${state.answers[q.id]===n?'selected':''}" onclick="answerQuestion('${q.id}', ${n})">
+            <span class="scale-num">${n}</span>
+            <span class="scale-label">${SCALE_LABELS[n-1]}</span>
+          </div>
+        `).join('')}
+      </div>
+    </div>`;
+
+    html += `<div class="nav-row">
+      ${state.currentStep > 0 ? '<button class="btn-secondary" onclick="prevStep()">&larr; Inapoi</button>' : '<span></span>'}
+      <button class="btn" id="next-btn" onclick="nextStep()" ${state.answers[q.id] ? '' : 'disabled'}>Continua &rarr;</button>
+    </div>`;
+
+    container.innerHTML = html;
+  } else if(state.role === 'external' && state.currentStep < allQuestions.length + triggers.length){
+    const tIdx = state.currentStep - allQuestions.length;
+    const t = triggers[tIdx];
+
+    let html = '';
+    if(tIdx === 0){
+      html += `<div class="dim-header"><p class="dim-name">Trigger Indicators</p><p class="dim-desc">Raspunde pe baza a ceea ce ai observat direct. Doar pentru Observator.</p></div>`;
+    }
+
+    html += `<div class="trigger-block">
+      <p class="trigger-tag">${t.id} &middot; ${t.name}</p>
+      <p class="trigger-quote">${t.quote}</p>
+      <div class="tri-row">
+        <div class="tri-opt ${state.triggerAnswers[t.id]==='yes'?'selected':''}" onclick="answerTrigger('${t.id}','yes')">Da</div>
+        <div class="tri-opt ${state.triggerAnswers[t.id]==='no'?'selected':''}" onclick="answerTrigger('${t.id}','no')">Nu</div>
+        <div class="tri-opt ${state.triggerAnswers[t.id]==='na'?'selected':''}" onclick="answerTrigger('${t.id}','na')">Nu pot aprecia</div>
+      </div>
+    </div>`;
+
+    html += `<div class="nav-row">
+      <button class="btn-secondary" onclick="prevStep()">&larr; Inapoi</button>
+      <button class="btn" id="next-btn" onclick="nextStep()" ${state.triggerAnswers[t.id] ? '' : 'disabled'}>
+        ${tIdx === triggers.length - 1 ? 'Finalizeaza' : 'Continua'} &rarr;
+      </button>
+    </div>`;
+
+    container.innerHTML = html;
+  } else {
+    submitEvaluation();
+  }
+}
+
+function answerQuestion(qid, val){
+  state.answers[qid] = val;
+  document.querySelectorAll(`#scale-${qid} .scale-opt`).forEach((el,i) => {
+    el.classList.toggle('selected', i+1 === val);
+  });
+  document.getElementById('next-btn').disabled = false;
+}
+
+function answerTrigger(tid, val){
+  state.triggerAnswers[tid] = val;
+  renderStep();
+}
+
+function nextStep(){
+  state.currentStep++;
+  renderStep();
+}
+
+function prevStep(){
+  if(state.currentStep > 0){
+    state.currentStep--;
+    renderStep();
+  }
+}
+
+function calcDimScore(answers, dimKey, trackKey){
+  const cfg = TRACKS[trackKey];
+  const qs = cfg.dimensions.find(d => d.key === dimKey).questions;
+  const sum = qs.reduce((acc,q) => acc + (answers[q.id] || 0), 0);
+  return Math.round((sum / qs.length) * 20);
+}
+
+function calcTotalScore(answers, trackKey){
+  const cfg = TRACKS[trackKey];
+  const allQs = cfg.dimensions.flatMap(d => d.questions);
+  const sum = allQs.reduce((acc,q) => acc + (answers[q.id] || 0), 0);
+  return Math.round((sum / allQs.length) * 20);
+}
+
+async function submitEvaluation(){
+  try {
+    const payload = {
+      track: state.track,
+      role: state.role,
+      answers: state.answers,
+      triggerAnswers: state.role === 'external' ? state.triggerAnswers : null,
+      timestamp: Date.now()
+    };
+
+    const params = new URLSearchParams({
+      action: 'set',
+      code: state.code,
+      role: state.role,
+      payload: JSON.stringify(payload)
+    });
+
+    await fetch(GSCRIPT_URL + '?' + params.toString(), {
+      method: 'GET',
+      mode: 'no-cors',
+      redirect: 'follow'
+    });
+
+    document.getElementById('waiting-code').textContent = state.code;
+    showScreen('screen-waiting');
+    await checkBothComplete();
+  } catch(e){
+    console.error('Submit error:', e);
+    alert('A aparut o eroare la salvare: ' + e.message);
+  }
+}
+
+async function checkAgain(){
+  await checkBothComplete();
+}
+
+async function checkBothComplete(){
+  try {
+    const params = new URLSearchParams({
+      action: 'get',
+      code: state.code
+    });
+
+    const res = await fetch(GSCRIPT_URL + '?' + params.toString(), {
+      method: 'GET',
+      redirect: 'follow'
+    });
+
+    if(!res.ok){
+      console.error('Response not OK:', res.status);
+      return;
+    }
+
+    const data = await res.json();
+
+    let internalData = null, externalData = null;
+
+    if(data.internal){
+      try { internalData = JSON.parse(data.internal); } catch(e){}
+    }
+    if(data.external){
+      try { externalData = JSON.parse(data.external); } catch(e){}
+    }
+
+    if(internalData && externalData){
+      renderReport(internalData, externalData);
+      showScreen('screen-report');
+    }
+  } catch(e){
+    console.error('Check error:', e);
+  }
+}
+
+function renderReport(internalData, externalData){
+  const trackKey = internalData.track || externalData.track || state.track;
+  const cfg = TRACKS[trackKey];
+
+  const idss = calcTotalScore(internalData.answers, trackKey);
+  const odss = calcTotalScore(externalData.answers, trackKey);
+  const rgs = Math.abs(idss - odss);
+
+  document.getElementById('report-code-display').textContent = `Cod evaluare: ${state.code} \u00b7 ${cfg.name}`;
+  document.getElementById('idss-display').textContent = idss;
+  document.getElementById('odss-display').textContent = odss;
+
+  const dimRows = cfg.dimensions.map(d => {
+    const iScore = calcDimScore(internalData.answers, d.key, trackKey);
+    const oScore = calcDimScore(externalData.answers, d.key, trackKey);
+    return `<tr><td>${d.name}</td><td>${iScore}</td><td>${oScore}</td></tr>`;
+  }).join('');
+  document.getElementById('dim-table-body').innerHTML = dimRows +
+    `<tr><td style="font-weight:bold;color:var(--gold)">DSS Total</td><td style="font-weight:bold;color:var(--gold)">${idss}</td><td style="font-weight:bold;color:var(--gold)">${odss}</td></tr>`;
+
+  let gapZone, gapClass, gapTitle, gapText;
+  if(rgs <= 10){
+    gapZone = 'Low Gap'; gapClass = 'low';
+    gapTitle = 'Perceptii aliniate.';
+    gapText = 'Diferenta dintre perceptia interna si observatia externa este minima. Cele doua perspective converg.';
+  } else if(rgs <= 20){
+    gapZone = 'Moderate Gap'; gapClass = 'moderate';
+    gapTitle = 'Diferente observabile.';
+    gapText = 'Exista o diferenta intre cum este perceput mediul decizional intern si cum este observat din exterior. Merita explorata inainte de momentele decizionale critice.';
+  } else if(rgs <= 30){
+    gapZone = 'High Gap'; gapClass = 'high';
+    gapTitle = 'Perceptii semnificativ diferite.';
+    gapText = 'Diferenta semnificativa intre perceptia interna si observatia externa sugereaza posibile probleme de awareness. Anumite riscuri pot ramane neadresate pana la aparitia unor consecinte operationale sau juridice.';
+  } else {
+    gapZone = 'Critical Gap'; gapClass = 'critical';
+    gapTitle = 'Realitati paralele.';
+    gapText = 'Probabilitate ridicata de avoidance, denial, information distortion si expert bypass. Recomandam o sesiune de calibrare a perceptiei inainte de orice interventie de stabilizare propriu-zisa.';
+  }
+
+  document.getElementById('gap-banner').className = `gap-banner ${gapClass}`;
+  document.getElementById('gap-zone-label').textContent = `Reality Gap Score: ${rgs} \u00b7 ${gapZone}`;
+  document.getElementById('gap-title').textContent = gapTitle;
+  document.getElementById('gap-text').textContent = gapText;
+
+  let triggerHTML = '';
+  if(externalData.triggerAnswers){
+    const yesCount = Object.values(externalData.triggerAnswers).filter(v => v === 'yes').length;
+    let flagClass, flagText;
+    if(yesCount >= 3){
+      flagClass = 'critical'; flagText = `CRITICAL FLAG: ${yesCount} din 4 triggeri confirmati`;
+    } else if(yesCount === 2){
+      flagClass = 'attention'; flagText = `ATTENTION FLAG: ${yesCount} din 4 triggeri confirmati`;
+    } else {
+      flagClass = 'none'; flagText = `Fara flag: ${yesCount} din 4 triggeri confirmati`;
+    }
+
+    triggerHTML = `<h2 style="font-size:18px;margin:32px 0 16px;color:var(--paper)">Trigger Indicators</h2>
+      <div class="flag-banner ${flagClass}">${flagText}</div>`;
+
+    cfg.triggers.forEach(t => {
+      const val = externalData.triggerAnswers[t.id];
+      const label = val === 'yes' ? 'Da' : val === 'no' ? 'Nu' : 'Nu pot aprecia';
+      const cls = val === 'yes' ? 'yes' : val === 'no' ? 'no' : 'na';
+      triggerHTML += `<div class="trigger-result-row"><span class="tr-name">${t.name}</span><span class="tr-val ${cls}">${label}</span></div>`;
+    });
+  }
+  document.getElementById('trigger-section').innerHTML = triggerHTML;
+}
+
+function resetTool(){
+  state = {track:null, code:'', role:null, answers:{}, triggerAnswers:{}, currentStep:0};
+  document.getElementById('eval-code').value = '';
+  document.querySelectorAll('.track-card').forEach(c => c.classList.remove('selected'));
+  document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
+  showScreen('screen-track');
+}
+</script>
+
+</body>
+</html>
